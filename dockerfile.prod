@@ -1,0 +1,47 @@
+# Dependencias
+FROM node:22-alpine AS deps
+
+WORKDIR /usr/src/app
+
+RUN npm install -g pnpm
+
+COPY package*.json pnpm-lock.yaml* pnpm-workspace.yaml* ./
+
+RUN pnpm install
+
+# Builder - Construye la aplicación
+FROM node:22-alpine AS builder
+
+WORKDIR /usr/src/app
+
+RUN npm install -g pnpm
+
+# Copiar de deps los módulos de node
+COPY --from=deps /usr/src/app/node_modules ./node_modules
+
+# Copiar todo el código fuente de la aplicación
+COPY . .
+
+# Genera el Prisma Client (necesario antes del build, ya que el código importa sus tipos)
+RUN pnpm exec prisma generate
+
+RUN pnpm run build
+
+# Instala las dependencias de producción y limpia el cache de pnpm
+RUN pnpm install --prod --frozen-lockfile && pnpm store prune
+
+# Crear la imagen final de Docker
+FROM node:22-alpine AS prod
+
+WORKDIR /usr/src/app
+
+COPY --from=builder /usr/src/app/node_modules ./node_modules
+COPY --from=builder /usr/src/app/dist ./dist
+
+ENV NODE_ENV=production
+
+USER node
+
+EXPOSE 3000
+
+CMD ["node", "dist/main"]
