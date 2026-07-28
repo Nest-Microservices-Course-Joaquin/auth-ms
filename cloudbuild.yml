@@ -16,3 +16,6 @@ steps:
         'push',
         'europe-southwest1-docker.pkg.dev/microservices-course-503812/image-registry/auth-ms',
       ]
+options:
+  logging: CLOUD_LOGGING_ONLY
+  
