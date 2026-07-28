@@ -1,0 +1,18 @@
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      [
+        'build',
+        '-t',
+        'europe-southwest1-docker.pkg.dev/microservices-course-503812/image-registry/auth-ms',
+        '-f',
+        'dockerfile.prod',
+        '--platform=linux/amd64',
+        '.',
+      ]
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      [
+        'push',
+        'europe-southwest1-docker.pkg.dev/microservices-course-503812/image-registry/auth-ms',
+      ]
